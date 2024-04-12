@@ -50,8 +50,6 @@ class availability:
     
     def remove_slot(self, timeslot):
         self.timeslots.remove(timeslot)
-    
-
     def add_slot(self, timeslot):
         self.timeslots.append(timeslot)
     def __str__(self):
@@ -105,47 +103,7 @@ class course_struct:
     
     def __str__(self):
         return f'{self.course_code} - {self.title} - {self.professor} - {self.room} - {self.time_slot}'
-    
-# class course:
-#     def __init__(self, course_code, title, available_rooms,available_ranked_professors=None):
-#         if available_ranked_professors is None:
-#             available_ranked_professors = {}
-#         self.course_code = course_code
-#         self.title = title
-#         self.available_ranked_profs = available_ranked_professors  
-#         self.room = available_rooms  
-#         self.students = []
-#         self.enrolled = 0
-#         self.available_timeslots = []
 
-#     def add_student(self, student):
-#         self.students.append(student)
-#         self.enrolled += 1
-
-#     def remove_student(self, student):
-#         self.students.remove(student)
-#         self.enrolled -= 1
-
-#     def __str__(self):
-#         return f'{self.course_code} - {self.title} -'
-
-class csp_course_dom:
-    def __init__(self, course_list, course_prof_ranked, room_list):
-        self.course_list = course_list
-        self.course_prof_observer = course_prof_ranked
-        self.room_list = room_list
-
-    def generate_domains(self):
-            domains = {}
-            for course in self.course_list:
-                course_domain = []
-                for prof in (self.course_prof_observer.course_prof_ranked[course.course_code][1] +self.course_prof_observer.course_prof_ranked[course.course_code][2]):
-                    for slot in prof.availability.timeslots:
-                        for room in self.room_list:
-                            course_domain.append(course_struct(course.course_code, course.title, prof, room, slot, course.dep))
-                domains[course.course_code] = course_domain
-            return domains
-    
 
 class course_prof_observer:
     def __init__(self, course_prof_ranked):
@@ -166,6 +124,25 @@ class course_prof_observer:
                 self.course_prof_ranked[course_code][rank].remove(prof)
                 break
           
+class csp_course_dom:
+    def __init__(self, course_list, course_prof_ranked, room_list):
+        self.course_list = course_list
+        self.course_prof_observer = course_prof_ranked
+        self.room_list = room_list
+
+    def generate_domains(self):
+            domains = {}
+            for course in self.course_list:
+                course_domain = []
+                for prof in (self.course_prof_observer.course_prof_ranked[course.course_code][1] +self.course_prof_observer.course_prof_ranked[course.course_code][2]):
+                    for slot in prof.availability.timeslots:
+                        for room in self.room_list:
+                            course_domain.append(course_struct(course.course_code, course.title, prof, room, slot, course.dep))
+                domains[course.course_code] = course_domain
+            return domains
+    
+
+
 def generate_brute_domains(course_list, prof_list, room_list):
     domains = {}
     availability1 = availability()
@@ -242,8 +219,6 @@ def main():
     
     
     
-    #things to do: 1 make tabulation better for now to make it more clear eg: course, prof, timeslot as columns something like that
-    #try to add randomness to generate the courses to test the code, 
     #work on a way of embedding data in a way that I can generate and retrieve automatically it while keeping the code working
     #^^maybe csv maybe json whatever, so that we can later on make it work with the LLM
     #if I have time, try and also work on extra constraints, just to make sure we can and add it to the code, already mentioned 
@@ -252,6 +227,9 @@ def main():
 
     #top priority make a github and add mr laurent and father tony
 
+
+    #look for some other csp implementation online
+    
     #always when trying to solve any problem keep in mind that 20% of my time should be spent looking for already written solutions
     #this could save lives and always might save time, so always look for solutions before trying to write your own
 
