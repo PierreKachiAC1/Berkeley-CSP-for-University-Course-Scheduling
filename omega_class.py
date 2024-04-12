@@ -1,7 +1,8 @@
 from csp import *
-import tabulate
+from tabulate import tabulate
 from search import *
-
+import random
+import string
 
 class timeslot:
     
@@ -15,6 +16,22 @@ class timeslot:
         
         self.day = day
         self.time = time
+    
+    def randomize(self):
+        days = ['MW', 'TR', 'MWF', 'TTH', 'MTWTHF']
+        times=['8:00-9:15', '9:30-10:45', '11:00-12:15', '12:30-1:45', '2:00-3:15', '3:30-4:45', '5:00-6:15', '6:30-7:45', '8:00-9:15']
+        self.day=days[random.randint(0,4)]
+        self.time=times[random.randint(0,8)]
+
+    # def __init__(self, day, time):
+    #     days = ['MW', 'TR', 'MWF', 'TTH', 'MTWTHF']
+    #     times=['8:00-9:15', '9:30-10:45', '11:00-12:15', '12:30-1:45', '2:00-3:15', '3:30-4:45', '5:00-6:15', '6:30-7:45', '8:00-9:15']
+    #     self.day=days[day]
+    #     self.time=times[time]
+    
+    def __eq__(self, other):
+        return self.day == other.day and self.time == other.time
+
     def __str__(self):
         return f'{self.day} {self.time}'
 
@@ -22,31 +39,33 @@ class availability:
     def __init__(self, timeslot_list=None):
         if timeslot_list is None:
             timeslot_list = []
-        self.timeslots = set(timeslot_list)
+        self.timeslots = timeslot_list
         
     def fill_availability(self):
         days = ['MW', 'TR', 'MWF', 'TTH', 'MTWTHF']
         times = ['8:00-9:15', '9:30-10:45', '11:00-12:15', '12:30-1:45', '2:00-3:15', '3:30-4:45', '5:00-6:15', '6:30-7:45', '8:00-9:15']
         for day in days:
             for time in times:
-                self.timeslots.add(timeslot(day, time))
+                self.timeslots.append(timeslot(day, time))
     
     def remove_slot(self, timeslot):
         self.timeslots.remove(timeslot)
     
 
     def add_slot(self, timeslot):
-        self.timeslots.add(timeslot)
+        self.timeslots.append(timeslot)
     def __str__(self):
         return f'{self.timeslots}'
+    def __eq__(self, other):
+        return self.timeslots == other.timeslots
 
 class Room:
-    def __init__(self, code, capacity, availability=None):
+    def __init__(self, code, capacity, av=None):
         self.room_code = code
         self.capacity = capacity
-        if availability is None:
-            availability = availability()  
-        self.availability = availability
+        if av is None:
+            av = availability()  
+        self.availability = av
 
     def add_slot(self, timeslot):
         self.availability.add_slot(timeslot)
@@ -158,9 +177,39 @@ def generate_brute_domains(course_list, prof_list, room_list):
                 for room in room_list:
                     course_domain.append(course_struct(course.course_code, course.title, prof, room, slot, course.dep))
         domains[course.course_code] = course_domain
-    
-
     return domains
+    
+def generate_random_string(length):
+    characters = string.ascii_letters
+    random_string = ''.join(random.choice(characters) for i in range(length))
+    
+    return random_string
+
+def generate_random_domains(iter):
+    days = ['MW', 'TR', 'MWF', 'TTH', 'MTWTHF']
+    times=['8:00-9:15', '9:30-10:45', '11:00-12:15', '12:30-1:45', '2:00-3:15', '3:30-4:45', '5:00-6:15', '6:30-7:45', '8:00-9:15']
+    ts_list=[]
+    p_list=[]
+    r_list=[]
+    c_list=[]
+    for i in range(iter):
+        for j in range(random.randint(1,10)):
+            t = timeslot(days[random.randint(0,4)],times[random.randint(0,8)])
+            if t not in ts_list:
+                ts_list.append(t)
+        
+        availability1 = availability(ts_list)
+        availability2=availability()
+        availability2.fill_availability()
+        p_list.append(Professor(generate_random_string(10),availability1))
+        r_list.append(Room(generate_random_string(2)+str(random.randint(100,105)),random.randint(20,100),availability2))
+        c_list.append(course_struct("code:"+generate_random_string(5),"cname:"+generate_random_string(10),p_list[i],r_list[i],ts_list[random.randint(0,len(ts_list)-1)],generate_random_string(10)))
+    course_prof_ranked = {}
+    for c in c_list:
+        course_prof_ranked[c.course_code] = {1:[p_list[random.randint(0,len(p_list)//2)]],2:[p_list[random.randint(len(p_list)//2,len(p_list)-1)]]}
+    observer = course_prof_observer(course_prof_ranked)
+    csp_domain = csp_course_dom(c_list, observer, r_list)
+    return c_list,p_list,r_list,csp_domain
 #problem for later is that what if a course is a prerequisite for another one, then they can be on the same timeslot and no need to check for that
 def main():
 
@@ -224,6 +273,7 @@ def main():
     #         print(domain)
    
    
+
     def scheduling_constraint(course_name1, course1, course_name2, course2):
         if course1.time_slot== course2.time_slot and (course1.professor == course2.professor or course1.room == course2.room):
             return False
@@ -243,9 +293,13 @@ def main():
     solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv)
     if solution:
         print("Solution found:")
-        print(tabulate.tabulate(solution.items()))
+        data = [[key] + list(vars(value).values()) for key, value in solution.items()]
+        headers = ["Course Code"] + list(vars(next(iter(solution.values()))).keys())
+        print(tabulate(data, headers=headers, tablefmt="grid"))
     else:
         print("No solution found.")
+
+
 
     csp = CSP(course_keys,domains, neighbours, scheduling_constraint)
     s=AC3(csp)
@@ -253,11 +307,27 @@ def main():
     solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv)
     if solution:
         print("Solution found:")
-        print(tabulate.tabulate(solution.items()))
+        data = [[key] + list(vars(value).values()) for key, value in solution.items()]
+        headers = ["Course Code"] + list(vars(next(iter(solution.values()))).keys())
+        print(tabulate(data, headers=headers, tablefmt="grid"))
     else:
         print("No solution found.")
-        
 
 
+
+
+    c_list,p_list,r_list,csp_domain = generate_random_domains(100)
+    domains = csp_domain.generate_domains()
+    course_keys =[course.course_code for course in c_list]
+    neighbours = {course.course_code: [course2.course_code for course2 in c_list if course2.course_code != course.course_code] for course in c_list}
+    csp = CSP(course_keys,domains, neighbours, scheduling_constraint)
+    s=AC3(csp)
+    print(s)
+    solution = backtracking_search(csp, select_unassigned_variable=mrv, order_domain_values=lcv)
+    if solution:
+        print("Solution found:")
+        data = [[key] + list(vars(value).values()) for key, value in solution.items()]
+        headers = ["Course Code"] + list(vars(next(iter(solution.values()))).keys())
+        print(tabulate(data, headers=headers, tablefmt="grid"))
 if __name__ == "__main__":
     main()
