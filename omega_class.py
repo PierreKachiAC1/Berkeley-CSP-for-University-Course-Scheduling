@@ -251,7 +251,7 @@ class PreferredTimeConstraint(Constraint):
                 valid_assignments.append(valid_assignment)
         return valid_assignments
 
-class PreferredProfConstraint(Constraint):
+class PreferredProfConstraint(Constraint):#not tested or implemented
     def __init__(self, courses, expression):
         self.courses = courses
         self.expression = expression
@@ -289,7 +289,7 @@ def scheduling_constraint(course_name1, course1, course_name2, course2):
                     return False
     
     return True
-#be able to separate registrar(responsible for all departments/complete solutions) and department(partial, only their own courses)
+
 class deserializer:
     def __init__(self,json_path):
         self.json_path=json_path

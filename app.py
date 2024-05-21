@@ -21,7 +21,9 @@ def submit_data():
 
         with open(filename, 'w') as file:
             json.dump(data, file, indent=4)
+        #dont forget to send both the presentation and the code
 
+        #priority: comment the code, send the code and presentation by email to father rouhayem, and finally clean up the useless files
         ds =deserializer(filename)
         profs, rooms , courses, course_prof_ranked = ds.deserialize()
         cpo = course_prof_abs(course_prof_ranked)
@@ -35,11 +37,16 @@ def submit_data():
         if solution is None:
             return jsonify({"error": "No solution found"}), 400
         else:
+            tempdict = {}
             for key in solution.keys():
-                solution[key] = str(solution[key])
+                tempdict[key] = {"course_title":solution[key].title, "professor":str(solution[key].professor), "room":str(solution[key].room), "time":str(solution[key].time_slot)}
                 #fix api output to be parsable
-            return jsonify(solution), 200
+            return jsonify(tempdict), 200
+               
                 #comment about python in the presentation, since we plan on using this with llms and most machine learning is written in python we picked this json, even though a statically typed language would be easier
+                #words to use: do not use ideal, use programming jargon in general, near optimal*, its an np complete problem, solution in this case, a complete algorithm is one that always finds a
+                #extra importance on terminology
+                #try as close to 15 as possible, max 17
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
