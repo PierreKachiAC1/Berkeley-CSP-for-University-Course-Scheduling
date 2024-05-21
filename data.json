@@ -1,0 +1,83 @@
+{
+  "professors": [
+    {
+      "name": "Jessie Pinkman",
+      "availability": [
+        {"day": "MW", "time": "8:00-9:15"},
+        {"day": "TR", "time": "9:30-10:45"}
+      ]
+    },
+    {
+      "name": "Walter White",
+      "availability": "full"  
+    }
+  ],
+  "rooms": [
+    {
+      "code": "101",
+      "capacity": 50,
+      "availability": "full"
+    },
+    {
+      "code": "102",
+      "capacity": 40,
+      "availability": [
+        {"day": "MW", "time": "11:00-12:15"}
+      ]
+    }
+  ],
+  "courses": [
+    {
+      "course_code": "CS101",
+      "title": "Introduction to CS",
+      "department": "Computer Science",
+      "ranked_professors": {"1": ["Jessie Pinkman"], "2": ["Walter White"]},
+      "room": "101",
+      "enrollment": 30,
+      "timeslot": {"day": "MW", "time": "8:00-9:15"},
+      "constraints": [
+        {
+          "type": "binaryTimeConstraint",
+          "variables": ["CS101", "CS102"]
+        },
+        {
+          "type": "SpecificTimeConstraint",
+          "variables":[{"day": "TR", "time": "9:30-10:45"}]
+        }]
+    },
+    {
+      "course_code": "CS102",
+      "title": "Advanced Programming",
+      "department": "Computer Science",
+      "ranked_professors": {"1": ["Jessie Pinkman"], "2": ["Walter White"]},
+      "room": "102",
+      "enrollment": 30,
+      "timeslot": {"day": "TR", "time": "9:30-10:45"},
+      "constraints": [
+        {
+          "type": "BinaryTimeConstraint",
+          "variables": ["CS101", "CS102"]
+        },
+        {
+          "type": "BinarySameRoomConstraint",
+          "variables":{
+            "courses": ["CS101", "CS102"],
+            "room":"101"
+          }
+        }
+      ]
+    }
+  
+  ],
+  "soft_constraints": [
+    {
+      "type": "BinarySameRoomConstraint",
+      "variables": ["CS101", "CS102"],
+      "expression": {"1":["MW", "8:00-9:15"], "2":["TR", "9:30-10:45"]}
+    },
+    {
+      "type": "BinarySameRoomConstraint",
+      "variables": ["CS101", "CS102"],
+      "expression": {"1":"Albert Camus", "2":"Jean Jaques Rousseau"}
+    }
+  ]}
